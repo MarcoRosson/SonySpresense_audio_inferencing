@@ -10,6 +10,7 @@
 #include <SDHCI.h>
 #include <File.h>
 #include <LowPower.h>
+#include <RTC.h>
 
 // Declare an audio object
 AudioClass *theAudio; 
@@ -24,15 +25,6 @@ File myFile;
 int features[MAX_SIZE/2]; // Array containg the recorded samples
 
 ei_impulse_result_t result = { 0 }; // Contains the result of the predictions
-
-// To keep track of elapsed time
-long int t1;
-long int t2;
-int elapsed_time;
-int hours;
-int minutes;
-int seconds;
-int milliseconds;
 
 // This function is passed to features_signal.get_data
 int raw_feature_get_data(size_t offset, size_t length, float *out_ptr) {
@@ -86,13 +78,13 @@ void get_audio(int samples[]){
 
 void setup() {
   Serial.begin(115200);
+  RTC.begin();
   theAudio = AudioClass::getInstance();
   theAudio->begin();
   while (!SD.begin()) {
     ; /* wait until SD card is mounted. */
   }
   SD.mkdir("predictions/");
-  t1 = millis();
   
 }
 
@@ -108,14 +100,15 @@ void loop() {
   // Perform the classification
   run_classifier(&features_signal, &result, false);
 
-  t2 = millis();
-  elapsed_time = t2-t1;
-  hours = (elapsed_time / (1000 * 60 * 60)) % 24;
-  minutes = (elapsed_time / (1000 * 60)) % 60;
-  seconds = (elapsed_time / 1000) % 60;
+  // Elapsed time
+  RtcTime rtc = RTC.getTime();
+  int h = rtc.hour(); 
+  int m = rtc.minute(); 
+  int s = rtc.second();
+  
 
   // printing the time in the format of hh:mm:ss
-  Serial.printf("%02d:%02d:%02d\n", hours, minutes, seconds);
+//  Serial.printf("%02d:%02d:%02d\n", h, m, s);
 
 //  Serial.print("Predictions (DSP: ");
 //  Serial.print(result.timing.dsp);
@@ -126,12 +119,12 @@ void loop() {
 //  Serial.print(" ms.): \n");
 //  
 
-  Serial.print("[");
-  for (size_t ix = 0; ix < EI_CLASSIFIER_LABEL_COUNT; ix++) {
-            Serial.print(result.classification[ix].value, 5);
-            Serial.print(", ");
-  }
-  Serial.print("]\n");
+//  Serial.print("[");
+//  for (size_t ix = 0; ix < EI_CLASSIFIER_LABEL_COUNT; ix++) {
+//            Serial.print(result.classification[ix].value, 5);
+//            Serial.print(", ");
+//  }
+//  Serial.print("]\n");
 
   // To print the samples and plot them
 //  for (int i = 0; i<10000; i++){
@@ -142,7 +135,7 @@ void loop() {
   // Write the predictions on the SD card
   myFile = SD.open("predictions/predictions.txt", FILE_WRITE);
   if (myFile) {
-    myFile.printf("%02d:%02d:%02d\n", hours, minutes, seconds);
+    myFile.printf("%02d:%02d:%02d\n", h, m, s);
     myFile.print("[");
     for (size_t ix = 0; ix < EI_CLASSIFIER_LABEL_COUNT; ix++) {
               myFile.print(result.classification[ix].value, 5);
@@ -152,8 +145,7 @@ void loop() {
     myFile.close();
   } 
 
-  // Wait some time before a new recording
-  //delay(10000); // in ms
-  deepSleep(5);
+  // Wait some time before a new recording 
+  LowPower.deepSleep(5); // This function set a low power mode while the board is unused
 
 }
