@@ -1,3 +1,8 @@
+/* This code can be used to test the inference on the board
+ *  Once the code is flahed on the board, inference will be performed alternatively 
+ *  on two pre-recorded audio samples and the result will be printed on terminal
+ */
+
 #include <Performance_Calibration_Bird_sound_classifier_inferencing.h>
 #include "sample_features.h"
 
