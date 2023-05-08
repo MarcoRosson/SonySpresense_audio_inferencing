@@ -1,5 +1,6 @@
 # This code can be used to plot and listen to the samples recorded by the microphone
 # Just uncomment the line on the arduino code and copy on samples the results
+# The code will plot the sampled audio and store it as a .wav file
 
 
 import matplotlib.pyplot as plt
