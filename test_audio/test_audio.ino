@@ -1,3 +1,10 @@
+/* This code can be used to check the microphone output
+ *  Flash the code on the board and plug the analog microphone,
+ *  open the serial monitor and copy the output in 'audio_test.py'
+ *  The code will plot the sampled audio and create a wav file out of it
+ */
+
+
 #include <Audio.h>
 #include <LowPower.h>
 
@@ -22,21 +29,19 @@ void get_audio(int samples[]){
     int transformed_buffer[buffer_size/2];
 
     Serial.print("Initialization Audio Library\n");
-    theAudio->setRecorderMode(AS_SETRECDR_STS_INPUTDEVICE_MIC,100);
-    Serial.print("Hey\n");
+    theAudio->setRecorderMode(AS_SETRECDR_STS_INPUTDEVICE_MIC,100); # Gain = 100 (10dB) [range: 0-210]
     theAudio->initRecorder(AS_CODECTYPE_PCM, "/mnt/sd0/BIN", AS_SAMPLINGRATE_16000, AS_CHANNEL_MONO);
 
-    Serial.print("Init Recorder!\n");
+    Serial.print("Start Recording!\n");
 
     theAudio->startRecorder();
 
     uint32_t read_size=0;
     uint32_t total_size=0;
     
-    //usleep(2010000);
     while(total_size<max_size){ 
-      Serial.printf("Total: %u \n", total_size);
-      Serial.printf("Read: %u \n", read_size);
+//      Serial.printf("Total: %u \n", total_size);
+//      Serial.printf("Read: %u \n", read_size);
       theAudio->readFrames(s_buffer, buffer_size, &read_size);
       usleep(10);
       for (int i=0; i<read_size/2; i++){
@@ -45,12 +50,11 @@ void get_audio(int samples[]){
       }
       total_size += read_size;
     }
-    Serial.printf("Stop");
     theAudio->stopRecorder();
 
     theAudio->setReadyMode();
   
-    Serial.printf("End Recording");
+    Serial.printf("End Recording\n");
 }
 
 
@@ -68,8 +72,8 @@ void loop() {
   for (int i = 0; i<max_size/2; i++){
     Serial.printf("%d, ", transformed[i]); 
   }
-  Serial.printf("done");
+  Serial.printf("*END*");
   Serial.flush();
  
-  delay(5000);
+  delay(10000);
 }
