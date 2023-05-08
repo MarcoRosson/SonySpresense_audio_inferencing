@@ -13,7 +13,6 @@ AudioClass *theAudio;
 static const int32_t buffer_size = 200;
 const int32_t max_size = 64000;
 
-//char features[max_size];
 int transformed[max_size/2];
 
 void pcm_to_int(char* pcm_bytes, int* pcm_samples, int num_samples) {
@@ -29,7 +28,7 @@ void get_audio(int samples[]){
     int transformed_buffer[buffer_size/2];
 
     Serial.print("Initialization Audio Library\n");
-    theAudio->setRecorderMode(AS_SETRECDR_STS_INPUTDEVICE_MIC,100); # Gain = 100 (10dB) [range: 0-210]
+    theAudio->setRecorderMode(AS_SETRECDR_STS_INPUTDEVICE_MIC,100); // Gain = 100 (10dB) [range: 0-210]
     theAudio->initRecorder(AS_CODECTYPE_PCM, "/mnt/sd0/BIN", AS_SAMPLINGRATE_16000, AS_CHANNEL_MONO);
 
     Serial.print("Start Recording!\n");
@@ -64,7 +63,7 @@ void setup() {
   
   theAudio = AudioClass::getInstance();
   theAudio->begin();
-  LowPower.clockMode(CLOCK_MODE_32MHz); 
+  //LowPower.clockMode(CLOCK_MODE_32MHz); 
 }
 
 void loop() {
