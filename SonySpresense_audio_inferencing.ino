@@ -24,8 +24,6 @@ File myFile;
 
 int features[MAX_SIZE/2]; // Array containg the recorded samples
 
-ei_impulse_result_t result = { 0 }; // Contains the result of the predictions
-
 // This function is passed to features_signal.get_data
 int raw_feature_get_data(size_t offset, size_t length, float *out_ptr) {
     memcpy(out_ptr, features + offset, length * sizeof(float));
@@ -48,7 +46,7 @@ void get_audio(int samples[]){
     int transformed_buffer[BUFFER_SIZE/2];
 
     // Set the audio object in recording mode from the ready state
-    theAudio->setRecorderMode(AS_SETRECDR_STS_INPUTDEVICE_MIC,200); // 200=20dB gain -> can be changed to adapt to the environment
+    theAudio->setRecorderMode(AS_SETRECDR_STS_INPUTDEVICE_MIC,200); // 200=20dB gain (max=210) -> can be changed to adapt to the environment
     // Initialize the recorder
     theAudio->initRecorder(AS_CODECTYPE_PCM, "/mnt/sd0/BIN", AS_SAMPLINGRATE_16000, AS_CHANNEL_MONO);
     // Start the recording
@@ -59,9 +57,9 @@ void get_audio(int samples[]){
     
     while(total_size<MAX_SIZE){ 
       // printf("Total: %u \n", total_size);
-      // printf("Read: %u \n", read_size);
+      printf("Read: %u \n", read_size);
+      usleep(10); // to give time to theAudio to get data
       theAudio->readFrames(s_buffer, BUFFER_SIZE, &read_size); // reads from theAudio to the s_buffer and updates the read_size
-      usleep(50); // to give time to theAudio to get data
       // convert samples from char to int and append to samples
       for (int i=0; i<read_size/2; i++){
         pcm_to_int(s_buffer, transformed_buffer, BUFFER_SIZE/2);
@@ -79,10 +77,11 @@ void get_audio(int samples[]){
 void setup() {
   Serial.begin(115200);
   RTC.begin();
+  //LowPower.clockMode(CLOCK_MODE_32MHz); 
   theAudio = AudioClass::getInstance();
   theAudio->begin();
   while (!SD.begin()) {
-    ; /* wait until SD card is mounted. */
+    ; // wait until SD card is mounted
   }
   SD.mkdir("predictions/");
   
@@ -92,10 +91,15 @@ void loop() {
   // Record the audio
   get_audio(features);
 
+  // Contains the result of the predictions
+  ei_impulse_result_t result = {0}; 
+
   // Declare and fill a features_signal
   signal_t features_signal;
   features_signal.total_length = sizeof(features) / sizeof(features[0]);
   features_signal.get_data = &raw_feature_get_data;
+
+  //LowPower.clockMode(CLOCK_MODE_156MHz);
 
   // Perform the classification
   run_classifier(&features_signal, &result, false);
@@ -109,7 +113,7 @@ void loop() {
 
   // printing the time in the format of hh:mm:ss
 //  Serial.printf("%02d:%02d:%02d\n", h, m, s);
-
+//
 //  Serial.print("Predictions (DSP: ");
 //  Serial.print(result.timing.dsp);
 //  Serial.print(" ms., Classification: ");
@@ -117,20 +121,20 @@ void loop() {
 //  Serial.print(" ms., Anomaly: ");
 //  Serial.print(result.timing.anomaly);
 //  Serial.print(" ms.): \n");
-//  
-
+//
 //  Serial.print("[");
 //  for (size_t ix = 0; ix < EI_CLASSIFIER_LABEL_COUNT; ix++) {
 //            Serial.print(result.classification[ix].value, 5);
 //            Serial.print(", ");
 //  }
 //  Serial.print("]\n");
-
-  // To print the samples and plot them
+//  
+//  // To print the samples and plot them
 //  for (int i = 0; i<10000; i++){
-//    printf("%d, ", features[i]); 
+//    Serial.printf("%d, ", features[i]); 
 //  }
-//  printf("done \n");
+//  Serial.printf("done \n");
+//  Serial.flush();
 
   // Write the predictions on the SD card
   myFile = SD.open("predictions/predictions.txt", FILE_WRITE);
@@ -146,6 +150,7 @@ void loop() {
   } 
 
   // Wait some time before a new recording 
-  LowPower.deepSleep(5); // This function set a low power mode while the board is unused
+  LowPower.deepSleep(20); // This function set a low power mode while the board is unused
+  // ATTENTION!! In this mode all power domains are turned off and the program state is being reset
 
 }
