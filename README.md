@@ -27,4 +27,14 @@ The audio inference should now be running. In order to check the results, unplug
 
 ## To customize the project
 The proposed Neural Network s just an example of what the system can do. In order to run the inference with your specifications, you can use the platform of [**Edge Impulse**](https://www.edgeimpulse.com/) to modify an existing project, create a new one or use a custom pretrained network, with the new function BYOM. \
-Once the project is ready, go to the **Deployment** tab and export it as *Arduino Library*. Now you can import it in the project, in place of the existing one, without any modifications (Only if you changed the paramteter *Impulse Design>Create impulse>Time series data>Window size*, you may need to adapt the constant **MAX_SIZE** accordingly).
+Once the project is ready, go to the **Deployment** tab and export it as *Arduino Library*. Now you can import it in the project, in place of the existing one, without any modifications (only if you changed the paramteter '*Impulse Design>Create impulse>Time series data>Window size*', you may need to adapt the constant **MAX_SIZE** accordingly).
+
+## Demo Code
+### test_audio
+This code can be used to check the microphone output:
+ *  Flash the code on the board and plug the analog microphone,
+ *  Open the serial monitor and copy the output in 'audio_test.py'
+ *  The code will plot the sampled audio and create a wav file out of it
+
+### test_inference
+This code can be used to test the inference on the board: once the code is flahed on the board, inference will be performed alternatively on two pre-recorded audio samples and the result will be printed on terminal
